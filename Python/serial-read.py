@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 def getmatrix():
-    ser = serial.Serial('/dev/cu.usbmodem1421')
+    ser = serial.Serial('COM8')
     raw = ser.read(7000)
     #strip data before 'x'
     for c in raw:

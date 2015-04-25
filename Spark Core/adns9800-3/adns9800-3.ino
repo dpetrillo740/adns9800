@@ -1,4 +1,6 @@
 #include "ADNS9800_SROM_A4.h"
+#include "SPI.h"
+#include <avr/pgmspace.h>
 // Registers
 #define REG_Product_ID                           0x00
 #define REG_Revision_ID                          0x01
@@ -56,10 +58,10 @@ unsigned long pollTimer;
 volatile byte xydat[5];
 int16_t xydelt[2];
 volatile byte movementflag=0;
-const int ncs = D2;
+const int ncs = 2;
 
-unsigned short firmware_length = 3070;
-extern unsigned char firmware_data[];
+extern const unsigned short firmware_length;
+extern const unsigned char firmware_data[];
 
 
 void setup() {
@@ -76,10 +78,10 @@ void setup() {
   SPI.setClockDivider(8);
 
   performStartup();
-  Serial.println("ADNS9800testPolling");
+  //Serial.println("ADNS9800testPolling");
   dispRegisters();
   initComplete=9;
-  Serial.println("Setup Complete");
+  //Serial.println("Setup Complete");
 
 }
 
@@ -122,7 +124,7 @@ void adns_write_reg(byte reg_addr, byte data){
 
 void adns_upload_firmware(){
   // send the firmware to the chip, cf p.18 of the datasheet
-  Serial.println("Uploading firmware...");
+  //Serial.println("Uploading firmware...");
   // set the configuration_IV register in 3k firmware mode
   adns_write_reg(REG_Configuration_IV, 0x02); // bit 1 = 1 for 3k mode, other bits are reserved
 
@@ -143,8 +145,8 @@ void adns_upload_firmware(){
   // send all bytes of the firmware
   unsigned char c;
   for(int i = 0; i < firmware_length; i++){
-  //  c = (unsigned char)pgm_read_byte(firmware_data + i);
-    c = firmware_data[i];
+    c = (unsigned char)pgm_read_byte(firmware_data + i);
+  //  c = firmware_data[i];
     SPI.transfer(c);
     delayMicroseconds(15);
   }
@@ -153,7 +155,7 @@ void adns_upload_firmware(){
 
 void adns_frame_capture(){  //
   // download a frame of data, cf p.18 of the datasheet
-  Serial.println("Frame capture...");
+  //Serial.println("Frame capture...");
   // Reset the chip by writing 0x5a to Power_Up_Reset register (address 0x3a)
   adns_write_reg(REG_Power_Up_Reset, 0x5a); // force reset
   delay(50);
@@ -179,7 +181,7 @@ void adns_frame_capture(){  //
       //Read bit 0 of Motion register (0x02)
      // byte data2 = adns_read_reg(REG_Pixel_Burst);
      // Serial.println(data2);
-     Serial.print("x");
+     Serial.print(F("x"));
      //Serial.println(i);
 
       adns_com_begin();
@@ -198,12 +200,12 @@ void adns_frame_capture(){  //
         for(int i = 0; i < 29; i++){
           byte data = SPI.transfer(0);
           Serial.print(data);
-          Serial.print(",");
+          Serial.print(F(","));
       //    delayMicroseconds(15);
         }
         byte data = SPI.transfer(0);
         Serial.print(data);
-        Serial.print(";");
+        Serial.print(F(";"));
      //   delayMicroseconds(15);
       }
 
@@ -240,7 +242,7 @@ void performStartup(void){
 
   delay(1);
 
-  Serial.println("Optical Chip Initialized");
+  //Serial.println("Optical Chip Initialized");
   }
 
 void UpdatePointer(void){
@@ -280,7 +282,7 @@ void dispRegisters(void){
   for(rctr=0; rctr<4; rctr++){
     SPI.transfer(oreg[rctr]);
     delay(1);
-    Serial.println("---");
+    //Serial.println("---");
     Serial.println(oregname[rctr]);
     Serial.println(oreg[rctr],HEX);
     regres = SPI.transfer(0);
@@ -328,13 +330,13 @@ void loop() {
 
     UpdatePointer();
     
-    //Serial.print("X = ");
-    Serial.print(xydelt[0]);
-   // Serial.print(" Y = ");
-    Serial.print(xydelt[1]);
+    Serial.print("X = ");
+    Serial.println(xydelt[0]);
+    Serial.print(" Y = ");
+    Serial.println(xydelt[1]);
     
     
-   // Serial.print(" Time elapsed = ");
+    Serial.print(" Time elapsed = ");
     Serial.println(millis()-timer);
     timer = millis();
 
