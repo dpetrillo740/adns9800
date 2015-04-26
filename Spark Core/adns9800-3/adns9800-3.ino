@@ -55,8 +55,11 @@ byte testctr=0;
 unsigned long currTime;
 unsigned long timer;
 unsigned long pollTimer;
+float xtoll=0;
 volatile byte xydat[5];
+volatile byte framedat[4];
 int16_t xydelt[2];
+uint16_t frameshut[3];
 volatile byte movementflag=0;
 const int ncs = 2;
 
@@ -66,7 +69,7 @@ extern const unsigned char firmware_data[];
 
 void setup() {
   Serial.begin(9600);
-  delay(5000);
+  //delay(5000);
 
   pinMode (ncs, OUTPUT);
 
@@ -178,11 +181,9 @@ void adns_frame_capture(){  //
       // wait for more than one frame period
       delay(10); // assume that the frame rate is as low as 100fps... even if it should never be that low
 
-      //Read bit 0 of Motion register (0x02)
-     // byte data2 = adns_read_reg(REG_Pixel_Burst);
-     // Serial.println(data2);
-     Serial.print(F("x"));
-     //Serial.println(i);
+     
+     //Serial.print(F("x"));
+     Serial.println();
 
       adns_com_begin();
       // send adress of the register, with MSBit = 0 to indicate it's a read
@@ -268,6 +269,18 @@ void UpdatePointer(void){
     
     }
   }
+  
+void UpdateFrameShut(void){
+  if(initComplete==9){
+        framedat[0] = (byte)adns_read_reg(REG_Shutter_Lower);
+        framedat[1] = (byte)adns_read_reg(REG_Frame_Period_Lower);
+        framedat[2] = (byte)adns_read_reg(REG_Shutter_Upper);
+        framedat[3] = (byte)adns_read_reg(REG_Frame_Period_Upper);
+        frameshut[0] = (uint16_t)(framedat[2]<<8) | framedat[0];
+        frameshut[1] = (uint16_t)(framedat[3]<<8) | framedat[1];
+        frameshut[2] = (uint16_t)adns_read_reg(REG_SQUAL);
+  }
+}
 
 void dispRegisters(void){
   int oreg[7] = {
@@ -293,52 +306,49 @@ void dispRegisters(void){
   digitalWrite(ncs,HIGH);
 }
 
-
-int convTwosComp(int b){
-  //Convert from 2's complement
-  if(b & 0x80){
-    b = -1 * ((b ^ 0xff) + 1);
-    }
-  return b;
-  }
-
 void loop() {
 
-  /*
-  currTime = millis();
 
-  if(currTime > timer){
-    Serial.println(testctr++);
-    timer = currTime + 2000;
-    }
+  currTime = millis();
 
   if(currTime > pollTimer){
     UpdatePointer();
-    xydat[0] = convTwosComp(xydat[0]);
-    xydat[1] = convTwosComp(xydat[1]);
-      if(xydat[0] != 0 || xydat[1] != 0){
-        Serial.print("x = ");
-        Serial.print(xydat[0]);
-        Serial.print(" | ");
-        Serial.print("y = ");
-        Serial.println(xydat[1]);
-        }
-    pollTimer = currTime + 10;
+    UpdateFrameShut();
+    //xtoll = xtoll + xydelt[0];
+    //Serial.println(xtoll*0.00509985F); //to print inches
+    Serial.print("SPEED = ");
+    Serial.print(xydelt[0]*0.005795282054208F); // to print mph
+    Serial.println(" MPH");
+    Serial.print("SQUAL = ");
+    Serial.println(frameshut[2]);
+    pollTimer = currTime + 50;
     }
-    */
+   
     
 
-    UpdatePointer();
+    //UpdatePointer();
+    //UpdateFrameShut();
     
+    /*
     Serial.print("X = ");
     Serial.println(xydelt[0]);
-    Serial.print(" Y = ");
+    Serial.print("Y = ");
     Serial.println(xydelt[1]);
     
+    Serial.print("Shutter Value = ");
+    Serial.println(frameshut[0]);
+    Serial.print("Frame Value = ");
+    Serial.println(frameshut[1]);
+    Serial.print("SQUAL = ");
+    Serial.println(frameshut[2]);
     
-    Serial.print(" Time elapsed = ");
+    
+    Serial.print("Time elapsed = ");
     Serial.println(millis()-timer);
     timer = millis();
+    
+    delay(100);
+    */
 
     
     //adns_frame_capture();
