@@ -3,8 +3,11 @@ import numpy
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
-ser = serial.Serial('/dev/cu.usbmodem1421')
+ser = serial.Serial('/dev/cu.usbmodem1421', timeout = 4)
 raw = ser.readline()
+
+for y in range (20):
+    raw = ser.readline()
 
 def getmatrix():
     raw = ser.readline()
