@@ -314,10 +314,14 @@ void loop() {
   if(currTime > pollTimer){
     UpdatePointer();
     UpdateFrameShut();
-    //xtoll = xtoll + xydelt[0];
-    //Serial.println(xtoll*0.00509985F); //to print inches
-    Serial.print("SPEED = ");
+    xtoll = xtoll + xydelt[0];
+    Serial.print("Displacement = ");
+    Serial.println(xtoll*0.004489332F); //to print inches
+    Serial.print("SPEED X = ");
     Serial.print(xydelt[0]*0.005795282054208F); // to print mph
+    Serial.println(" MPH");
+    Serial.print("SPEED Y = ");
+    Serial.print(xydelt[1]*0.005795282054208F); // to print mph
     Serial.println(" MPH");
     Serial.print("SQUAL = ");
     Serial.println(frameshut[2]);
@@ -351,7 +355,7 @@ void loop() {
     */
 
     
-    //adns_frame_capture();
+     adns_frame_capture();
     
 
 }
